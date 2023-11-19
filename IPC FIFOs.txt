@@ -1,0 +1,74 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+// Function that counts the number of characters, words, and lines in a sentence
+void count_words_chars_lines(char *sentence, int *chars, int *words, int *lines) {
+    *chars = strlen(sentence);
+    *words = 0;
+    *lines = 0;
+
+    for (int i = 0; i < strlen(sentence); i++) {
+        if (sentence[i] == ' ')
+            (*words)++;
+        if (sentence[i] == '\n')
+            (*lines)++;
+    }
+    (*words)++;
+    (*lines)++;
+}
+
+// Function that simulates the communication between the two processes
+void process_communication() {
+    int pipe_sentences[2];
+    int pipe_results[2];
+
+    // Create two pipes
+    pipe(pipe_sentences);
+    pipe(pipe_results);
+
+    // Fork the current process into two independent processes
+    pid_t pid = fork();
+
+    if (pid == 0) { // First process
+        // Close the unused ends of the pipes
+        close(pipe_sentences[1]);
+        close(pipe_results[0]);
+
+        // Continuously read sentences from the first process and write them on one pipe to be read by the second process
+        while (1) {
+            char sentence[1024];
+            read(pipe_sentences[0], sentence, sizeof(sentence));
+            write(pipe_results[1], sentence, strlen(sentence));
+        }
+
+    } else { // Second process
+        // Close the unused ends of the pipes
+        close(pipe_sentences[0]);
+        close(pipe_results[1]);
+
+        // Continuously read sentences from the first process, count the number of characters, words, and lines, and then write this output back to the first process
+        while (1) {
+            char sentence[1024];
+            read(pipe_results[0], sentence, sizeof(sentence));
+
+            int chars, words, lines;
+            count_words_chars_lines(sentence, &chars, &words, &lines);
+
+            char output[1024];
+            sprintf(output, "Chars: %d, Words: %d, Lines: %d\n", chars, words, lines);
+            write(pipe_sentences[1], output, strlen(output));
+        }
+
+        // Reap the child process
+        waitpid(pid, NULL, 0);
+    }
+}
+
+int main() {
+    process_communication();
+    return 0;
+}

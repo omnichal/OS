@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+#define MAX 5
+#define NTHREADS 2
+
+sem_t empty, full;
+pthread_mutex_t mutex;
+int buffer[MAX], in = 0, out = 0;
+
+void* producer(void* arg) {
+    int i = 0;
+    for(i = 0; i < 10; i++) {
+        sem_wait(&empty);
+        pthread_mutex_lock(&mutex);
+        buffer[in] = i;
+        printf("Producer: Produced an item %d\n", buffer[in]);
+        in = (in + 1) % MAX;
+        pthread_mutex_unlock(&mutex);
+        sem_post(&full);
+    }
+    return NULL;
+}
+
+void* consumer(void* arg) {
+    int i = 0;
+    for(i = 0; i < 10; i++) {
+        sem_wait(&full);
+        pthread_mutex_lock(&mutex);
+        printf("Consumer: Consumed an item %d\n", buffer[out]);
+        out = (out + 1) % MAX;
+        pthread_mutex_unlock(&mutex);
+        sem_post(&empty);
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t tid[NTHREADS];
+
+    sem_init(&empty, 0, MAX);
+    sem_init(&full, 0, 0);
+    pthread_mutex_init(&mutex, NULL);
+
+    pthread_create(&tid[0], NULL, producer, NULL);
+    pthread_create(&tid[1], NULL, consumer, NULL);
+
+    pthread_join(tid[0], NULL);
+    pthread_join(tid[1], NULL);
+
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    pthread_mutex_destroy(&mutex);
+
+    return 0;
+}

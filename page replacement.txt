@@ -1,0 +1,108 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+bool find(int value, int arr[], int size) {
+    for(int i = 0; i < size; i++) {
+        if(arr[i] == value) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void update(int value, int arr[], int size) {
+    for(int i = 0; i < size; i++) {
+        if(arr[i] == value) {
+            arr[i] = -1;
+            break;
+        }
+    }
+}
+
+int findMax(int arr[], int size) {
+    int max_index = 0;
+    for(int i = 1; i < size; i++) {
+        if(arr[i] > arr[max_index]) {
+            max_index = i;
+        }
+    }
+    return max_index;
+}
+
+int findMin(int arr[], int size) {
+    int min_index = 0;
+    for(int i = 1; i < size; i++) {
+        if(arr[i] < arr[min_index]) {
+            min_index = i;
+        }
+    }
+    return min_index;
+}
+
+int main() {
+    int reference_str[20] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2, 1, 2, 0, 1, 7, 0};
+    int frame_size = 3;
+    int len = sizeof(reference_str) / sizeof(reference_str[0]);
+
+    if(frame_size < 3) {
+        printf("Error: Frame size must be at least 3.\n");
+        return 1;
+    }
+
+    int frame[frame_size];
+    int result[len];
+    int index = 0;
+
+    printf("Page Reference String: ");
+    for(int i = 0; i < len; i++) {
+        printf("%d ", reference_str[i]);
+    }
+    printf("\n");
+
+    printf("FCFS:\n");
+    for(int i = 0; i < len; i++) {
+        if(!find(reference_str[i], frame, frame_size)) {
+            frame[index] = reference_str[i];
+            result[i] = -1;
+            index = (index + 1) % frame_size;
+        } else {
+            result[i] = 0;
+        }
+        printf("%d ", result[i]);
+    }
+    printf("\n");
+
+    // Implementing LRU
+    printf("LRU:\n");
+    for(int i = 0; i < len; i++) {
+        if(!find(reference_str[i], frame, frame_size)) {
+            frame[index] = reference_str[i];
+            result[i] = -1;
+            index = (index + 1) % frame_size;
+        } else {
+            result[i] = 0;
+            update(reference_str[i], frame, frame_size);
+        }
+        printf("%d ", result[i]);
+    }
+    printf("\n");
+
+    // Implementing Optimal
+    printf("Optimal:\n");
+    int faults = 0;
+    for(int i = 0; i < len; i++) {
+        if(!find(reference_str[i], frame, frame_size)) {
+            frame[index] = reference_str[i];
+            result[i] = -1;
+            faults++;
+            index = (index + 1) % frame_size;
+        } else {
+            result[i] = 0;
+        }
+        printf("%d ", result[i]);
+    }
+    printf("\n");
+    printf("Total Page Faults: %d\n", faults);
+
+    return 0;
+}

@@ -1,0 +1,115 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_REQUESTS 100
+
+void read_requests(int requests[], int* requests_count);
+int seek_time(int prev_track, int curr_track, int head_track);
+
+void SSTF(int requests[], int requests_count, int head_track) {
+    int seek_sequence[MAX_REQUESTS], curr_track, distance, min_distance;
+    int count = 0, i, j, temp;
+
+    printf("\nUsing SSTF: ");
+    seek_sequence[count++] = head_track;
+    while (count < requests_count) {
+        curr_track = -1;
+        min_distance = 99999;
+        for (i = 0; i < requests_count; i++) {
+            if (requests[i] != -1) {
+                distance = abs(requests[i] - head_track);
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    curr_track = requests[i];
+                }
+            }
+        }
+        if (curr_track != -1) {
+            head_track = curr_track;
+            seek_sequence[count++] = head_track;
+            requests[i] = -1;
+        }
+    }
+    for (i = 0; i < requests_count; i++)
+        printf("%d ", seek_sequence[i]);
+}
+
+void SCAN(int requests[], int requests_count, int head_track) {
+    int seek_sequence[MAX_REQUESTS], sorted_requests[MAX_REQUESTS];
+    int curr_track, direction, distance, count = 0, i, j, temp;
+
+    printf("\nUsing SCAN: ");
+    seek_sequence[count++] = head_track;
+    for (i = 0; i < requests_count; i++)
+        sorted_requests[i] = requests[i];
+    direction = sorted_requests[0] >= head_track ? 1 : -1;
+    sorted_requests[requests_count++] = direction == 1 ? MAX_REQUESTS : -1;
+    qsort(sorted_requests, requests_count, sizeof(int), cmpfunc);
+    sorted_requests[requests_count - 1] = -1;
+    count = 0;
+    i = 0;
+    while (count < requests_count) {
+        if (direction == 1) {
+            if (sorted_requests[i] > head_track) {
+                curr_track = sorted_requests[i];
+                head_track = curr_track;
+                seek_sequence[count++] = head_track;
+                sorted_requests[i] = -1;
+            } else {
+                i++;
+            }
+        } else {
+            if (sorted_requests[i] < head_track) {
+                curr_track = sorted_requests[i];
+                head_track = curr_track;
+                seek_sequence[count++] = head_track;
+                sorted_requests[i] = -1;
+            } else {
+                i++;
+            }
+        }
+    }
+    for (i = 0; i < requests_count; i++)
+        printf("%d ", seek_sequence[i]);
+}
+
+void C_LOOK(int requests[], int requests_count, int head_track) {
+    int seek_sequence[MAX_REQUESTS], curr_track, count = 0, i, j, temp;
+
+    printf("\nUsing C-LOOK: ");
+    seek_sequence[count++] = head_track;
+    for (i = 0; i < requests_count; i++) {
+        curr_track = requests[i];
+        head_track = curr_track;
+        seek_sequence[count++] = head_track;
+    }
+    for (i = 0; i < requests_count; i++)
+        printf("%d ", seek_sequence[i]);
+}
+
+int cmpfunc(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
+}
+
+int main() {
+    int requests[MAX_REQUESTS];
+    int head_track = 0;
+    int requests_count = 0;
+
+    read_requests(requests, &requests_count);
+    printf("\nHead track is initially at %d.\n", head_track);
+    SSTF(requests, requests_count, head_track);
+    SCAN(requests, requests_count, head_track);
+    C_LOOK(requests, requests_count, head_track);
+
+    return 0;
+}
+
+void read_requests(int requests[], int* requests_count) {
+    printf("\nEnter the total number of requests: ");
+    scanf("%d", requests_count);
+    printf("Enter the requests: ");
+    for (int i = 0; i < *requests_count; i++) {
+        scanf("%d", &requests[i]);
+    }
+}

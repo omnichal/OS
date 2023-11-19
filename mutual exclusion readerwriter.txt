@@ -1,0 +1,49 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+#define NREADERS 5
+#define NWRITERS 3
+
+int data = 0;
+sem_t rmutex, wmutex;
+
+void* reader(void* arg) {
+    sem_wait(&rmutex);
+    printf("Reader %ld: Reading data %d\n", (long)arg, data);
+    sleep(1);
+    sem_post(&rmutex);
+    return NULL;
+}
+
+void* writer(void* arg) {
+    sem_wait(&wmutex);
+    printf("Writer %ld: Writing data %d\n", (long)arg, ++data);
+    sleep(1);
+    sem_post(&wmutex);
+    return NULL;
+}
+
+int main() {
+    pthread_t tid[NREADERS + NWRITERS];
+    sem_init(&rmutex, 0, 1);
+    sem_init(&wmutex, 0, 1);
+
+    int i = 0;
+    for(i = 0; i < NREADERS; i++) {
+        pthread_create(&tid[i], NULL, reader, (void*)i);
+    }
+    for(i = NREADERS; i < NREADERS + NWRITERS; i++) {
+        pthread_create(&tid[i], NULL, writer, (void*)(i - NREADERS));
+    }
+
+    for(i = 0; i < NREADERS + NWRITERS; i++) {
+        pthread_join(tid[i], NULL);
+    }
+
+    sem_destroy(&rmutex);
+    sem_destroy(&wmutex);
+
+    return 0;
+}

@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+void sort(int arr[], int n) {
+    int i, j, temp;
+    for (i = 0; i < n - 1; i++) {
+        for (j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int arr[] = {64, 34, 25, 12, 22, 11, 90};
+    int n = sizeof(arr) / sizeof(arr[0]);
+    pid_t pid;
+    int i;
+
+    printf("Before sorting: \n");
+    for (i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    pid = fork();
+
+    if (pid == 0) { // Child process
+        printf("Child process created. Child process id: %d\n", getpid());
+        sort(arr, n);
+        printf("Child process has finished sorting.\n");
+    } else if (pid > 0) { // Parent process
+        int status;
+        printf("Parent process id: %d\n", getpid());
+        printf("Waiting for child process to finish sorting...\n");
+        waitpid(pid, &status, 0);
+        printf("Parent process has detected that child process has finished sorting.\n");
+    } else { // Error in fork system call
+        printf("Fork failed. Exiting...\n");
+        exit(1);
+    }
+
+    printf("After sorting: \n");
+    for (i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    return 0;
+}

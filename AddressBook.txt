@@ -1,0 +1,59 @@
+#!/bin/bash
+
+class="AddressBook"
+address_book=()
+
+create_address_book() {
+    address_book+=("$1")
+}
+
+view_address_book() {
+    for i in "${!address_book[@]}"; do
+        printf "%s\n" "${address_book[i]}"
+    done
+}
+
+insert_record() {
+    read -p "Enter the name: " name
+    read -p "Enter the address: " address
+    read -p "Enter the phone number: " phone_number
+    local record="name: $name, address: $address, phone number: $phone_number"
+    create_address_book "$record"
+}
+
+delete_record() {
+    read -p "Enter the index of the record to delete: " index
+    unset 'address_book[index - 1]'
+    address_book=("${address_book[@]}")
+}
+
+modify_record() {
+    read -p "Enter the index of the record to modify: " index
+    read -p "Enter the new name: " name
+    read -p "Enter the new address: " address
+    read -p "Enter the new phone number: " phone_number
+    local record="name: $name, address: $address, phone number: $phone_number"
+    address_book[index - 1]="$record"
+}
+
+while true; do
+    clear
+    echo "Welcome to the address book!"
+    echo "a) Create address book."
+    echo "b) View address book."
+    echo "c) Insert a record."
+    echo "d) Delete a record."
+    echo "e) Modify a record."
+    echo "f) Exit"
+    read -p "Please select an option: " option
+    case $option in
+        a) create_address_book "$class";;
+        b) view_address_book;;
+        c) insert_record;;
+        d) delete_record;;
+        e) modify_record;;
+        f) exit;;
+        *) echo "Invalid option.";;
+    esac
+    sleep 1
+done
